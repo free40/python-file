@@ -1,4 +1,5 @@
 import pytest
+
 from file import MAGIC_MIME
 from file import MAGIC_MIME_TYPE
 from file import MAGIC_NONE
