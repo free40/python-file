@@ -2,7 +2,7 @@ from . import ffi
 from . import lib
 from . import flags
 
-__version__ = "0.4.0"
+__version__ = "0.1.0"
 
 
 class Magic(object):

@@ -1,6 +1,5 @@
 from cffi import FFI
 
-
 ffi = FFI()
 ffi.cdef("""
   typedef ... magic_set;
@@ -20,9 +19,10 @@ ffi.cdef("""
   int magic_list(magic_t, const char *);
   int magic_errno(magic_t);
 """)
-ffi.set_source("magic.lib", "#include <magic.h>")
-#
-# magic = ffi.verify("#include <magic.h>",
-#                    libraries=["magic"],
-#                    ext_package="magic")
+ffi.set_source(
+    'file._libmagic',
+    '#include <magic.h>'
+)
 
+if __name__ == '__main__':
+    ffi.compile()
