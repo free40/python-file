@@ -1,8 +1,9 @@
-from ._libmagic import _ffi as _ffi
-from ._libmagic import _lib as _lib
+import sys
+
+from ._libmagic import ffi as _ffi
+from ._libmagic import lib as _lib
 
 __version__ = "0.1.0"
-
 
 MAGIC_NONE = 0x000000  # No flags
 MAGIC_DEBUG = 0x000001  # Turn on debugging
@@ -37,29 +38,35 @@ class Magic(object):
     _cookie = None
 
     def __init__(self, flags=MAGIC_MIME_TYPE, database=None):
-        self.initial_flags = flags
-        self.initial_database = database
+        self._flags = flags
+        self._database = database
+        self._lib = _lib
 
     def __enter__(self):
-        self._cookie = magic_open(self.flags)
-        magic_load(self._cookie, self.database)
+        self._cookie = magic_open(self._flags)
+        magic_load(self._cookie, self._database)
         return self
 
     def __exit__(self, *exc_info):
-        magic_close(self._cookie)
+        if self._cookie is not None:
+            self._lib.magic_close(self._cookie)
+            self._cookie = None
+
+    def __del__(self):
+        self.__exit__()
 
     @property
     def version(self):
-        return _ffi.version()
+        return _lib.magic_version()
 
     def setflags(self, flags):
-        return magic_setflags(self.cookie, flags)
+        return magic_setflags(self._cookie, flags)
 
     def file(self, path):
-        return magic_file(self.cookie, path)
+        return magic_file(self._cookie, path)
 
     def buffer(self, value):
-        return magic_buffer(self.cookie, value)
+        return magic_buffer(self._cookie, value)
 
 
 def magic_version():
@@ -97,11 +104,13 @@ def magic_load(cookie, path=None):
 
 
 def magic_file(cookie, path):
+    if not isinstance(path, bytes):
+        path = path.encode(sys.getfilesystemencoding())
     result = _lib.magic_file(cookie, path)
     if result == _ffi.NULL:
         raise ValueError(magic_error(cookie))
     else:
-        return _ffi.string(result)
+        return _ffi.string(result).decode('utf8')
 
 
 def magic_buffer(cookie, value):
@@ -109,4 +118,8 @@ def magic_buffer(cookie, value):
     if result == _ffi.NULL:
         raise ValueError(magic_error(cookie))
     else:
-        return _ffi.string(result)
+        return _ffi.string(result).decode('utf8')
+
+
+magic = Magic()
+magic.__enter__()

@@ -1,6 +1,8 @@
 import pytest
 
-from file import Magic, MAGIC_NONE
+from file import MAGIC_MIME_TYPE
+from file import MAGIC_NONE
+from file import Magic
 
 
 @pytest.fixture
@@ -14,24 +16,24 @@ def test_get_version(magic):
 
 
 def test_from_buffer(magic):
-    mimetype = magic.from_buffer("ehlo")
+    mimetype = magic.buffer(b"ehlo")
     assert mimetype == "ASCII text, with no line terminators"
 
 
 def test_from_file(magic):
-    mimetype = magic.from_file("/etc/passwd")
+    mimetype = magic.file("/etc/passwd")
     assert mimetype == "ASCII text"
 
 
 def test_with(magic):
-    magic.set_flags(magic.flags.MAGIC_MIME_TYPE)
-    mimetype = magic.from_file("/etc/passwd")
+    magic.setflags(MAGIC_MIME_TYPE)
+    mimetype = magic.file("/etc/passwd")
     assert mimetype == "text/plain"
 
 
-def test_set_flags(magic):
-    mimetype = magic.from_file("/etc/passwd")
+def test_setflags(magic):
+    mimetype = magic.file("/etc/passwd")
     assert mimetype == "ASCII text"
-    magic.set_flags(magic.flags.MAGIC_MIME_TYPE)
-    mimetype = magic.from_file("/etc/passwd")
+    magic.setflags(MAGIC_MIME_TYPE)
+    mimetype = magic.file("/etc/passwd")
     assert mimetype == "text/plain"

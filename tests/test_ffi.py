@@ -1,10 +1,13 @@
 import pytest
-
-from file import MAGIC_NONE, magic_setflags, MAGIC_MIME, MAGIC_MIME_TYPE
+from file import MAGIC_MIME
+from file import MAGIC_MIME_TYPE
+from file import MAGIC_NONE
 from file import magic_buffer
+from file import magic_close
 from file import magic_file
 from file import magic_load
-from file import magic_open, magic_close
+from file import magic_open
+from file import magic_setflags
 from file import magic_version
 
 
@@ -38,7 +41,7 @@ def test_file():
 
     magic_load(cookie)
     mimetype = magic_file(cookie, b"/etc/passwd")
-    assert mimetype == b"ASCII text"
+    assert mimetype == "ASCII text"
 
 
 def test_buffer():
@@ -47,28 +50,28 @@ def test_buffer():
     magic_load(cookie)
 
     mimetype = magic_buffer(cookie, b"")
-    assert mimetype == b"empty"
+    assert mimetype == "empty"
 
     mimetype = magic_buffer(cookie, b"kittens")
-    assert mimetype == b"ASCII text, with no line terminators"
+    assert mimetype == "ASCII text, with no line terminators"
 
     mimetype = magic_buffer(cookie, b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A")
-    assert mimetype == b"PNG image data"
+    assert mimetype == "PNG image data"
 
 
-def test_set_flags():
+def test_setflags():
     cookie = magic_open(MAGIC_NONE)
     assert cookie is not None
 
     magic_load(cookie)
 
     mimetype = magic_buffer(cookie, b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A")
-    assert mimetype == b"PNG image data"
+    assert mimetype == "PNG image data"
 
     magic_setflags(cookie, MAGIC_MIME_TYPE)
     mimetype = magic_buffer(cookie, b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A")
-    assert mimetype == b"image/png"
+    assert mimetype == "image/png"
 
     magic_setflags(cookie, MAGIC_MIME)
     mimetype = magic_buffer(cookie, b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A")
-    assert mimetype == b"image/png; charset=binary"
+    assert mimetype == "image/png; charset=binary"

@@ -21,7 +21,8 @@ ffi.cdef('''
 ''')
 ffi.set_source(
     'file._libmagic',
-    '#include <magic.h>'
+    '#include <magic.h>',
+    libraries=["magic"],
 )
 
 if __name__ == '__main__':

@@ -81,20 +81,20 @@ Usage
 
     from file import Magic
 
-    with Magic() as m:
-        print m.from_buffer("hello") # => "text/plain"
+    with Magic() as magic:
+        print(magic.buffer("hello")) # => "text/plain"
 
-    from file import from_buffer, from_file, set_flags
+    from file import magic_buffer, magic_file, magic_setflags
 
     magic = Magic()
-    mimetype = from_buffer("\x89\x50\x4E\x47\x0D\x0A\x1A\x0A")
-    print mimetype # => "image/png"
+    mimetype = magic_buffer("\x89\x50\x4E\x47\x0D\x0A\x1A\x0A")
+    print(mimetype) # => "image/png"
 
-    mimetype = from_file("/etc/passwd")
-    print mimetype # => "text/plain"
+    mimetype = magic_file("/etc/passwd")
+    print(mimetype) # => "text/plain"
 
-    updated = set_flags(magic.flags.MAGIC_NONE)
-    print updated # => True
-    mimetype = from_file("demo.docx")
-    print mimetype # => "Microsoft Word 2007+"
+    from file import MAGIC_NONE
+    magic_setflags(MAGIC_NONE)
+    mimetype = magic_file("demo.docx")
+    print(mimetype) # => "Microsoft Word 2007+"
     magic.close() # don't forget about this
