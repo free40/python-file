@@ -1,34 +1,37 @@
-import unittest
+import pytest
 
-import magic
-import magic.flags
+from file import Magic, MAGIC_NONE
 
 
-class MagicTestCase(unittest.TestCase):
+@pytest.fixture
+def magic():
+    with Magic(MAGIC_NONE) as magic:
+        yield magic
 
-  def setUp(self):
-    self.magic = magic.Magic(magic.flags.MAGIC_NONE)
 
-  def test_get_version(self):
-    self.assertTrue(isinstance(self.magic.version, int))
+def test_get_version(magic):
+    assert isinstance(magic.version, int)
 
-  def test_from_buffer(self):
-    mimetype = self.magic.from_buffer("ehlo")
-    self.assertEqual(mimetype, "ASCII text, with no line terminators")
 
-  def test_from_file(self):
-    mimetype = self.magic.from_file("/etc/passwd")
-    self.assertEqual(mimetype, "ASCII text")
+def test_from_buffer(magic):
+    mimetype = magic.from_buffer("ehlo")
+    assert mimetype == "ASCII text, with no line terminators"
 
-  def test_with(self):
-    with magic.Magic() as m:
-      self.magic.set_flags(magic.flags.MAGIC_MIME_TYPE)
-      mimetype = self.magic.from_file("/etc/passwd")
-      self.assertEqual(mimetype, "text/plain")
 
-  def test_set_flags(self):
-    mimetype = self.magic.from_file("/etc/passwd")
-    self.assertEqual(mimetype, "ASCII text")
-    self.magic.set_flags(magic.flags.MAGIC_MIME_TYPE)
-    mimetype = self.magic.from_file("/etc/passwd")
-    self.assertEqual(mimetype, "text/plain")
+def test_from_file(magic):
+    mimetype = magic.from_file("/etc/passwd")
+    assert mimetype == "ASCII text"
+
+
+def test_with(magic):
+    magic.set_flags(magic.flags.MAGIC_MIME_TYPE)
+    mimetype = magic.from_file("/etc/passwd")
+    assert mimetype == "text/plain"
+
+
+def test_set_flags(magic):
+    mimetype = magic.from_file("/etc/passwd")
+    assert mimetype == "ASCII text"
+    magic.set_flags(magic.flags.MAGIC_MIME_TYPE)
+    mimetype = magic.from_file("/etc/passwd")
+    assert mimetype == "text/plain"

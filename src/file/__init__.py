@@ -1,6 +1,5 @@
-from . import ffi
-from . import flags
-from . import lib
+from ._libmagic import _ffi as _ffi
+from ._libmagic import _lib as _lib
 
 __version__ = "0.1.0"
 
@@ -17,7 +16,7 @@ MAGIC_PRESERVE_ATIME = 0x000080  # Restore access time on exit
 MAGIC_RAW = 0x000100  # Don't translate unprintable chars
 MAGIC_ERROR = 0x000200  # Handle ENOENT etc as real errors
 MAGIC_MIME_ENCODING = 0x000400  # Return the MIME encoding
-MAGIC_MIME = (MAGIC_MIME_TYPE | MAGIC_MIME_ENCODING)
+MAGIC_MIME = MAGIC_MIME_TYPE | MAGIC_MIME_ENCODING
 MAGIC_APPLE = 0x000800  # Return the Apple creator and type
 
 MAGIC_NO_CHECK_COMPRESS = 0x001000  # Don't check for compressed files
@@ -35,105 +34,79 @@ MAGIC_NO_CHECK_TROFF = 0x000000  # Don't check ascii/troff
 
 
 class Magic(object):
-    def __init__(self, initial_flags=flags.MAGIC_MIME_TYPE, database=None):
-        cookie = ffi.open(initial_flags)
-        if database:
-            ffi.load(cookie, database)
-        else:
-            ffi.load(cookie)
-        self.cookie = cookie
+    _cookie = None
+
+    def __init__(self, flags=MAGIC_MIME_TYPE, database=None):
+        self.initial_flags = flags
+        self.initial_database = database
 
     def __enter__(self):
+        self._cookie = magic_open(self.flags)
+        magic_load(self._cookie, self.database)
         return self
 
-    def __exit__(self, type, value, traceback):
-        ffi.close(self.cookie)
+    def __exit__(self, *exc_info):
+        magic_close(self._cookie)
 
     @property
     def version(self):
-        return ffi.version()
+        return _ffi.version()
 
-    def set_flags(self, flags):
-        return ffi.set_flags(self.cookie, flags)
+    def setflags(self, flags):
+        return magic_setflags(self.cookie, flags)
 
-    def handle_bytes(function):
-        def wrapper(self, value):
-            if not isinstance(value, bytes):
-                value = value.encode("utf-8")
-            response = function(self, value)
-            return response.decode("utf-8")
+    def file(self, path):
+        return magic_file(self.cookie, path)
 
-        return wrapper
-
-    @handle_bytes
-    def from_file(self, filepath):
-        return ffi.file(self.cookie, filepath)
-
-    @handle_bytes
-    def from_buffer(self, value):
-        return ffi.buffer(self.cookie, value)
+    def buffer(self, value):
+        return magic_buffer(self.cookie, value)
 
 
-def handle_null_exception(function):
-    def wrapper(cookie, *args, **kwargs):
-        response = function(cookie, *args, **kwargs)
-        if response == ffi.NULL:
-            message = error(cookie)
-            raise ValueError(message)
-        else:
-            return ffi.string(response)
-
-    return wrapper
+def magic_version():
+    return _lib.magic_version()
 
 
-def version():
-    return lib.magic_version()
-
-
-def set_flags(cookie, flags):
-    status = lib.magic_setflags(cookie, flags)
+def magic_setflags(cookie, flags):
+    status = _lib.magic_setflags(cookie, flags)
     if status != 0:
-        message = error(cookie)
-        raise ValueError(message)
-    else:
-        return True
+        raise ValueError(magic_error(cookie))
 
 
-def error(cookie):
-    message = lib.magic_error(cookie)
-    return ffi.string(message)
+def magic_error(cookie):
+    return _ffi.string(_lib.magic_error(cookie))
 
 
-def open(flags):
-    cookie = lib.magic_open(flags)
-    if cookie == ffi.NULL:
-        message = error(cookie)
-        raise RuntimeError(message)
+def magic_open(flags):
+    cookie = _lib.magic_open(flags)
+    if cookie == _ffi.NULL:
+        raise RuntimeError(magic_error(cookie))
     else:
         return cookie
 
 
-def close(cookie):
-    closed = lib.magic_close(cookie)
-    return True
+def magic_close(cookie):
+    _lib.magic_close(cookie)
 
 
-def load(cookie, path=ffi.NULL):
-    status = lib.magic_load(cookie, path)
+def magic_load(cookie, path=None):
+    if path is None:
+        path = _ffi.NULL
+    status = _lib.magic_load(cookie, path)
     if status != 0:
-        message = error(cookie)
-        raise ValueError(message)
+        raise ValueError(magic_error(cookie))
+
+
+def magic_file(cookie, path):
+    result = _lib.magic_file(cookie, path)
+    if result == _ffi.NULL:
+        raise ValueError(magic_error(cookie))
     else:
-        return True
+        return _ffi.string(result)
 
 
-@handle_null_exception
-def file(cookie, path):
-    mimetype = lib.magic_file(cookie, path)
-    return mimetype
-
-
-@handle_null_exception
-def buffer(cookie, value):
-    mimetype = lib.magic_buffer(cookie, value, len(value))
-    return mimetype
+def magic_buffer(cookie, value):
+    result = _lib.magic_buffer(cookie, value, len(value))
+    if result == _ffi.NULL:
+        raise ValueError(magic_error(cookie))
+    else:
+        return _ffi.string(result)
