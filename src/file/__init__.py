@@ -3,7 +3,7 @@ import sys
 from ._libmagic import ffi as _ffi
 from ._libmagic import lib as _lib
 
-__version__ = "0.1.0"
+__version__ = "__version__ = '0.2.0'"
 
 MAGIC_NONE = 0x000000  # No flags
 MAGIC_DEBUG = 0x000001  # Turn on debugging
