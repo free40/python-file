@@ -43,17 +43,11 @@ class Magic(object):
             ffi.load(cookie)
         self.cookie = cookie
 
-    def __del__(self):
-        try:
-            ffi.close(self.cookie)
-        except Exception as exception:
-            raise
-
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
-        del self
+        ffi.close(self.cookie)
 
     @property
     def version(self):
