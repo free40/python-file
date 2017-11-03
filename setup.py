@@ -32,7 +32,7 @@ if 'TOXENV' in os.environ and 'SETUPPY_CFLAGS' in os.environ:
 
 setup(
     name='file',
-    version='0.2.1',
+    version='0.3.0',
     license='MIT license',
     description='CFFI bindings for libmagic.',
     long_description='%s\n%s' % (
