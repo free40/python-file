@@ -33,6 +33,17 @@ MAGIC_NO_CHECK_ENCODING = 0x200000  # Don't check text encodings
 MAGIC_NO_CHECK_FORTRAN = 0x000000  # Don't check ascii/fortran
 MAGIC_NO_CHECK_TROFF = 0x000000  # Don't check ascii/troff
 
+class cached_property(object):
+    def __init__(self, func):
+        self.func = func
+        self.__doc__ = func.__doc__
+
+    def __get__(self, obj, cls):
+        if obj is None:
+            return self
+        value = obj.__dict__[self.func.__name__] = self.func(obj)
+        return value
+
 
 class Magic(object):
     _cookie = None
@@ -42,9 +53,12 @@ class Magic(object):
         self._database = database
         self._lib = _lib
 
+    @cached_property
+    def _cookie(self):
+        return magic_open(self._flags)
+
     def __enter__(self):
-        self._cookie = magic_open(self._flags)
-        magic_load(self._cookie, self._database)
+        self.load(self._database)
         return self
 
     def __exit__(self, *exc_info):
@@ -55,10 +69,6 @@ class Magic(object):
     def __del__(self):
         self.__exit__()
 
-    @property
-    def version(self):
-        return _lib.magic_version()
-
     def setflags(self, flags):
         return magic_setflags(self._cookie, flags)
 
@@ -68,9 +78,8 @@ class Magic(object):
     def buffer(self, value):
         return magic_buffer(self._cookie, value)
 
-
-def magic_version():
-    return _lib.magic_version()
+    def load(self, database):
+        magic_load(self._cookie, database)
 
 
 def magic_setflags(cookie, flags):
@@ -119,7 +128,3 @@ def magic_buffer(cookie, value):
         raise ValueError(magic_error(cookie))
     else:
         return _ffi.string(result).decode('utf8')
-
-
-magic = Magic()
-magic.__enter__()

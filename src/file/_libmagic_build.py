@@ -12,7 +12,6 @@ ffi.cdef('''
     const char *magic_buffer(magic_t, const void *, size_t);
     const char *magic_error(magic_t);
     int magic_setflags(magic_t, int);
-    int magic_version(void);
     int magic_load(magic_t, const char *);
 //  int magic_compile(magic_t, const char *);
 //  int magic_check(magic_t, const char *);
@@ -22,7 +21,7 @@ ffi.cdef('''
 ffi.set_source(
     'file._libmagic',
     '#include <magic.h>',
-    libraries=["magic"],
+    libraries=['magic'],
 )
 
 if __name__ == '__main__':
