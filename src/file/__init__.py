@@ -58,7 +58,7 @@ class Magic(object):
         return magic_open(self._flags)
 
     def __enter__(self):
-        self.load(self._database)
+        self.load()
         return self
 
     def __exit__(self, *exc_info):
@@ -78,7 +78,9 @@ class Magic(object):
     def buffer(self, value):
         return magic_buffer(self._cookie, value)
 
-    def load(self, database):
+    def load(self, database=None):
+        if database is None:
+            database = self._database
         magic_load(self._cookie, database)
 
 
