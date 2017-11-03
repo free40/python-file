@@ -33,6 +33,7 @@ MAGIC_NO_CHECK_ENCODING = 0x200000  # Don't check text encodings
 MAGIC_NO_CHECK_FORTRAN = 0x000000  # Don't check ascii/fortran
 MAGIC_NO_CHECK_TROFF = 0x000000  # Don't check ascii/troff
 
+
 class cached_property(object):
     def __init__(self, func):
         self.func = func
